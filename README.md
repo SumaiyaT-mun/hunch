@@ -61,11 +61,3 @@ Scam awareness shouldn't just be something you read about.
 HUNCH turns it into something you practice.
 
 Can you trust your hunch?
-
-Then save it and run:
-
-```cmd
-git add README.md
-git commit -m "Update HUNCH README"
-git push
-```
