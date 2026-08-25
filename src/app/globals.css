@@ -106,3 +106,108 @@ button { font: inherit; }
     gap: 8px;
   }
 }
+
+
+.hunch-result-card {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 24px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  box-sizing: border-box;
+}
+
+.hunch-result-card__top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+  margin-bottom: 28px;
+}
+
+.hunch-result-card__main {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.hunch-result-card__main span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.hunch-result-card__main strong {
+  display: block;
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.hunch-result-card__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hunch-result-card__stats div {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.hunch-result-card__stats span {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin-bottom: 5px;
+}
+
+.hunch-result-card__stats strong {
+  font-size: 15px;
+}
+
+.hunch-result-card p {
+  text-align: center;
+  margin: 24px 0 8px;
+  font-weight: 700;
+}
+
+.hunch-result-card small {
+  display: block;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.4;
+}
+
+.share-results-button {
+  width: 100%;
+  margin: 20px 0 8px;
+  padding: 14px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.share-results-button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-results-button:active {
+  transform: translateY(0);
+}

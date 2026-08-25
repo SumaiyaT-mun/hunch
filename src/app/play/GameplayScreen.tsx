@@ -607,7 +607,6 @@ function performanceMessage(
 
   return "Every round gives your judgment more data.";
 }
-
 function Scoreboard({
   level,
   levelXp,
@@ -635,26 +634,66 @@ function Scoreboard({
   onTryAgain: () => void;
   onChooseLevel: () => void;
 }) {
+  const [shareStatus, setShareStatus] = useState<
+    "idle" | "shared" | "copied"
+  >("idle");
+
   const roundCount = level.scenarioSet.length;
 
-  const levelAccuracy = Math.round(
-    (levelCorrectHunches / roundCount) * 100
-  );
+  const levelAccuracy =
+    roundCount > 0
+      ? Math.round((levelCorrectHunches / roundCount) * 100)
+      : 0;
 
-  const overallRoundCount =
-    levels.reduce(
-      (total, currentLevel) =>
-        total + currentLevel.scenarioSet.length,
-      0
-    );
+  const overallRoundCount = levels.reduce(
+    (total, currentLevel) => total + currentLevel.scenarioSet.length,
+    0
+  );
 
   const overallAccuracy =
     overallRoundCount > 0
       ? Math.round(
-          (overallCorrectDecisions / overallRoundCount) *
-            100
+          (overallCorrectDecisions / overallRoundCount) * 100
         )
       : 0;
+
+  async function handleShareResults() {
+    const shareText = `🕵️ MY HUNCH SCORE
+
+${overallAccuracy}% scam detection accuracy
+⭐ ${totalXp} XP
+🔥 Best streak: ${bestStreak}
+🎯 ${overallCorrectDecisions}/${overallRoundCount} correct decisions
+🏆 ${levelsCompleted}/${levels.length} levels completed
+
+Think you can beat my score?
+
+Play HUNCH →`;
+
+    const shareData = {
+      title: "My HUNCH Score 🕵️",
+      text: shareText,
+      url: window.location.origin,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus("shared");
+      } else {
+        await navigator.clipboard.writeText(
+          `${shareText}\n${window.location.origin}`
+        );
+        setShareStatus("copied");
+      }
+    } catch {
+      // User closed the native share menu.
+    }
+
+    window.setTimeout(() => {
+      setShareStatus("idle");
+    }, 2500);
+  }
 
   return (
     <div
@@ -662,23 +701,18 @@ function Scoreboard({
         isFinal ? " is-final" : ""
       }`}
     >
+      {/* HEADER */}
       <div className="reveal-badge">
-        ✓{" "}
-        {isFinal
-          ? "ALL LEVELS REVIEWED"
-          : `${level.name} COMPLETE`}
+        ✓ {isFinal ? "ALL LEVELS REVIEWED" : `${level.name} COMPLETE`}
       </div>
 
       <p className="scoreboard-kicker">
-        {isFinal
-          ? "YOUR HUNCH RESULTS"
-          : "LEVEL COMPLETE!"}
+        {isFinal ? "YOUR HUNCH RESULTS" : "LEVEL COMPLETE!"}
       </p>
 
-      <h2>
-        {isFinal ? "Your Hunch Results" : level.name}
-      </h2>
+      <h2>{isFinal ? "Your Hunch Results" : level.name}</h2>
 
+      {/* FINAL SCOREBOARD */}
       {isFinal ? (
         <>
           <div className="scoreboard-stats">
@@ -695,8 +729,7 @@ function Scoreboard({
             <div>
               <span>TOTAL CORRECT</span>
               <strong>
-                {overallCorrectDecisions} /{" "}
-                {overallRoundCount}
+                {overallCorrectDecisions} / {overallRoundCount}
               </strong>
             </div>
 
@@ -719,8 +752,65 @@ function Scoreboard({
               overallRoundCount
             )}
           </p>
+
+          {/* VISUAL SHARE CARD */}
+          <div className="hunch-result-card">
+            <div className="hunch-result-card__top">
+              <span>🕵️ HUNCH</span>
+              <span>RESULTS</span>
+            </div>
+
+            <div className="hunch-result-card__main">
+              <span>SCAM DETECTION ACCURACY</span>
+              <strong>{overallAccuracy}%</strong>
+            </div>
+
+            <div className="hunch-result-card__stats">
+              <div>
+                <span>XP</span>
+                <strong>⭐ {totalXp}</strong>
+              </div>
+
+              <div>
+                <span>BEST STREAK</span>
+                <strong>🔥 {bestStreak}</strong>
+              </div>
+
+              <div>
+                <span>CORRECT</span>
+                <strong>
+                  🎯 {overallCorrectDecisions}/{overallRoundCount}
+                </strong>
+              </div>
+
+              <div>
+                <span>LEVELS</span>
+                <strong>
+                  🏆 {levelsCompleted}/{levels.length}
+                </strong>
+              </div>
+            </div>
+
+            <p>Think you can beat my hunch?</p>
+
+            <small>HUNCH // TRUST DECISION SIMULATOR</small>
+          </div>
+
+          {/* SHARE BUTTON */}
+          <button
+            className="share-results-button"
+            type="button"
+            onClick={handleShareResults}
+          >
+            {shareStatus === "shared"
+              ? "✓ Shared!"
+              : shareStatus === "copied"
+                ? "✓ Results copied!"
+                : "↗ Share My Results"}
+          </button>
         </>
       ) : (
+        /* LEVEL SCOREBOARD */
         <>
           <div className="scoreboard-highlight">
             +{levelXp} XP <span>THIS LEVEL</span>
@@ -759,6 +849,7 @@ function Scoreboard({
         </>
       )}
 
+      {/* ACTIONS */}
       <div className="scoreboard-actions">
         {isFinal ? (
           <button
@@ -793,7 +884,6 @@ function Scoreboard({
     </div>
   );
 }
-
 export default function GameplayScreen() {
   const [selectedLevelId, setSelectedLevelId] =
     useState<LevelId | null>(null);
@@ -852,6 +942,8 @@ export default function GameplayScreen() {
       const isNewGame =
         window.location.search === "?new=1";
 
+      const isViewingResults = window.location.search === "?results=1";
+
       if (isNewGame) {
         clearGameProgress();
 
@@ -897,6 +989,40 @@ export default function GameplayScreen() {
       setSecondsLeft(60);
       setTimedOut(false);
       setHasLoadedProgress(true);
+
+      if (isViewingResults) {
+  const progress = loadGameProgress();
+
+  if (
+    progress &&
+    progress.completedLevels.length === levels.length
+  ) {
+    const finalLevel = levels[levels.length - 1];
+
+    setTotalXp(progress.totalXP);
+    setStreak(progress.currentStreak);
+    setBestStreak(progress.bestStreak);
+    setCorrectDecisions(progress.correctAnswers);
+    setCompletedLevels(progress.completedLevels);
+
+    setSelectedLevelId(finalLevel.id);
+    setScenarioIndex(finalLevel.scenarioSet.length - 1);
+
+    setLevelXp(
+      progress.levelProgress?.[finalLevel.id]?.levelXP ?? 0
+    );
+
+    setLevelCorrectHunches(
+      progress.levelProgress?.[finalLevel.id]?.levelCorrectHunches ?? 0
+    );
+
+    setLevelCorrectDecisions(
+      progress.levelProgress?.[finalLevel.id]?.levelCorrectDecisions ?? 0
+    );
+
+    setStage("scoreboard");
+  }
+}
     }, 0);
 
     return () => window.clearTimeout(loadTimer);
