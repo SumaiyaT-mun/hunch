@@ -657,8 +657,8 @@ function Scoreboard({
         )
       : 0;
 
-  async function handleShareResults() {
-    const shareText = `🕵️ MY HUNCH SCORE
+async function handleShareResults() {
+  const shareText = `🕵️ MY HUNCH SCORE
 
 ${overallAccuracy}% scam detection accuracy
 ⭐ ${totalXp} XP
@@ -668,32 +668,19 @@ ${overallAccuracy}% scam detection accuracy
 
 Think you can beat my score?
 
-Play HUNCH →`;
+Play HUNCH → ${window.location.origin}`;
 
-    const shareData = {
-      title: "My HUNCH Score 🕵️",
-      text: shareText,
-      url: window.location.origin,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        setShareStatus("shared");
-      } else {
-        await navigator.clipboard.writeText(
-          `${shareText}\n${window.location.origin}`
-        );
-        setShareStatus("copied");
-      }
-    } catch {
-      // User closed the native share menu.
-    }
-
-    window.setTimeout(() => {
-      setShareStatus("idle");
-    }, 2500);
+  try {
+    await navigator.clipboard.writeText(shareText);
+    setShareStatus("copied");
+  } catch {
+    setShareStatus("idle");
   }
+
+  window.setTimeout(() => {
+    setShareStatus("idle");
+  }, 2500);
+}
 
   return (
     <div
