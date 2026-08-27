@@ -4,10 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { clearGameProgress, loadGameProgress, type SavedGameProgress } from "../lib/gameProgress";
 import { levels } from "../data/scenarios";
+import { supabase } from "../lib/supabase";
 
 export default function Home() {
   const [savedProgress, setSavedProgress] = useState<SavedGameProgress | null>(null);
   const [isConfirmingNewGame, setIsConfirmingNewGame] = useState(false);
+  const [email, setEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [waitlistStatus, setWaitlistStatus] = useState<
+  "idle" | "loading" | "success" | "error" | "exists"
+>("idle");
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => setSavedProgress(loadGameProgress()), 0);
@@ -21,6 +27,41 @@ export default function Home() {
     clearGameProgress();
     setSavedProgress(null);
     setIsConfirmingNewGame(false);
+  }
+  
+  async function handleWaitlistSubmit(
+  event: React.FormEvent<HTMLFormElement>
+) {
+  event.preventDefault();
+
+  if (!email.trim() || !location.trim()) {
+    setWaitlistStatus("error");
+    return;
+  }
+
+  setWaitlistStatus("loading");
+
+  const { error } = await supabase
+    .from("waitlist")
+    .insert({
+      email: email.trim().toLowerCase(),
+      location: location.trim(),
+    });
+
+  if (error) {
+    if (error.code === "23505") {
+      setWaitlistStatus("exists");
+    } else {
+      console.error(error);
+      setWaitlistStatus("error");
+    }
+
+    return;
+  }
+
+  setWaitlistStatus("success");
+  setEmail("");
+  setLocation("");
   }
 
   return (
@@ -49,6 +90,85 @@ export default function Home() {
           <div className="window-footer"><span>MAKE YOUR CALL</span><span>+ 120 XP</span></div>
         </div>
       </section>
+
+            <section className="waitlist-section" id="waitlist">
+      <div className="section-intro">
+    <p className="eyebrow">
+      <span>03</span> Stay in the loop
+    </p>
+
+    <h2>
+      Trust your
+      <br />
+      <em>HUNCH.</em>
+    </h2>
+
+    <p>
+      Want to hear about new scenarios, updates, and future
+      HUNCH releases? Join the waitlist.
+    </p>
+  </div>
+
+  <form
+    className="waitlist-form"
+    onSubmit={handleWaitlistSubmit}
+  >
+    <label htmlFor="waitlist-email">
+      Email
+    </label>
+
+    <input
+      id="waitlist-email"
+      type="email"
+      placeholder="you@example.com"
+      value={email}
+      onChange={(event) => setEmail(event.target.value)}
+      required
+    />
+
+    <label htmlFor="waitlist-location">
+      Location
+    </label>
+
+    <input
+      id="waitlist-location"
+      type="text"
+      placeholder="Country / City"
+      value={location}
+      onChange={(event) => setLocation(event.target.value)}
+      required
+    />
+
+    <button
+      className="button button--primary"
+      type="submit"
+      disabled={waitlistStatus === "loading"}
+    >
+      {waitlistStatus === "loading"
+        ? "Joining..."
+        : "Join the waitlist ↗"}
+    </button>
+
+    {waitlistStatus === "success" && (
+      <p className="waitlist-message">
+        ✓ You&apos;re on the list.
+      </p>
+    )}
+
+    {waitlistStatus === "exists" && (
+      <p className="waitlist-message">
+        You&apos;re already on the list 👀
+      </p>
+    )}
+
+    {waitlistStatus === "error" && (
+      <p className="waitlist-message">
+        Something went wrong. Please try again.
+      </p>
+    )}
+    </form>
+    </section>
+    
       {isConfirmingNewGame && <div className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="new-game-title"><div className="confirm-dialog__content"><p className="eyebrow">RESET YOUR PROGRESS</p><h2 id="new-game-title">Start a new game?</h2><p>Your current progress will be lost.</p><div className="hero__actions"><button className="button button--ghost" type="button" onClick={() => setIsConfirmingNewGame(false)}>Cancel</button><Link className="button button--primary" href="/play?new=1" onClick={handleNewGame}>Start new game</Link></div></div></div>}
       <footer className="site-footer"><span>HUNCH © 2026</span><span>TRUST NOTHING. VERIFY EVERYTHING.</span><span>MADE FOR THE CURIOUS <b>↗</b></span></footer>
     </main>
